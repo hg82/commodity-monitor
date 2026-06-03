@@ -1,127 +1,114 @@
 """
 scripts/fetch_exports.py
-Fetches Brazilian export data from Comex Stat API and saves to data/exports_*.csv
+Fetches Brazilian export data from USDA PSD API and saves to data/exports_*.csv
 Runs via GitHub Actions (scheduled) — not inside Streamlit Cloud.
+
+USDA PSD API: https://apps.fas.usda.gov/psdonline/api/psd/
+Country code for Brazil: BR
+Attribute ID 176 = Exports (1000 MT)
 """
 
 import requests
 import pandas as pd
 import json
 import os
+import time
 from datetime import datetime
 
-API_URL = "https://api-comexstat.mdic.gov.br/general"
+BASE_URL = "https://apps.fas.usda.gov/psdonline/api/psd"
 
 HEADERS = {
-    "Content-Type": "application/json",
     "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 (compatible; commodity-monitor/1.0)",
 }
 
-# NCM codes as integers (no leading zeros, no quotes)
-NCM_MAP = {
-    "Soybeans": [1201001, 1202900],
-    "Corn":     [10059010],
-    "Wheat":    [10019900, 10011900],
-    "Coffee":   [9011110, 9011200, 9012100],
-    "Sugar":    [17011400, 17019900],
-    "Cocoa":    [18010000, 18031000],
+# USDA PSD commodity codes (confirmed via fas.usda.gov/data/production/commodity/<code>)
+COMMODITIES = {
+    "Soybeans": "2222000",
+    "Corn":     "0440000",
+    "Wheat":    "0410000",
+    "Coffee":   "0711100",
+    "Sugar":    "0613100",
+    "Cocoa":    "0721100",
 }
 
+# Market years to fetch
 YEARS = [2021, 2022, 2023, 2024]
+
+# Attribute ID 176 = Exports (1000 MT) in PSD
+EXPORT_ATTR_ID = 176
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 
 
-def fetch_by_country(commodity: str, ncm_codes: list, year: int) -> pd.DataFrame:
-    """Fetch top destinations for one commodity/year."""
-    payload = {
-        "flow": "export",
-        "monthDetail": False,
-        "period": {"from": f"{year}-01", "to": f"{year}-12"},
-        "filters": [{"filter": "ncm", "values": ncm_codes}],
-        "details": ["country"],
-        "metrics": ["metricFOB", "metricKG"],
-    }
-    r = requests.post(API_URL, json=payload, headers=HEADERS, timeout=30)
-    r.raise_for_status()
-    rows = r.json().get("data", {}).get("list", [])
-    if not rows:
-        return pd.DataFrame()
-    df = pd.DataFrame(rows)
-    df["commodity"] = commodity
-    df["year"] = year
-    return df
+def fetch_psd(commodity_code: str, year: int) -> list:
+    """Fetch PSD data for Brazil, one commodity, one year."""
+    url = f"{BASE_URL}/commodity/{commodity_code}/country/BR/year/{year}"
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=30)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print(f"ERROR fetching {commodity_code} / {year}: {e}")
+        return []
 
 
-def fetch_annual_summary(commodity: str, ncm_codes: list, year: int) -> dict:
-    """Fetch total FOB for one commodity/year (no country breakdown)."""
-    payload = {
-        "flow": "export",
-        "monthDetail": False,
-        "period": {"from": f"{year}-01", "to": f"{year}-12"},
-        "filters": [{"filter": "ncm", "values": ncm_codes}],
-        "details": ["ncm"],
-        "metrics": ["metricFOB"],
-    }
-    r = requests.post(API_URL, json=payload, headers=HEADERS, timeout=30)
-    r.raise_for_status()
-    rows = r.json().get("data", {}).get("list", [])
-    total = sum(row.get("metricFOB", 0) for row in rows)
-    return {"Commodity": commodity, "Exports (USD)": total, "year": year}
+def get_export_value(records: list) -> float:
+    """Extract export volume (1000 MT) from PSD records."""
+    for rec in records:
+        if rec.get("attributeId") == EXPORT_ATTR_ID:
+            return float(rec.get("value", 0) or 0)
+    return 0.0
 
 
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    # --- 1. By-country data (Page 3) ---
-    print("Fetching by-country data...")
-    all_country_rows = []
-
-    for commodity, ncm_codes in NCM_MAP.items():
-        for year in YEARS:
-            print(f"  {commodity} {year}...", end=" ")
-            try:
-                df = fetch_by_country(commodity, ncm_codes, year)
-                if not df.empty:
-                    all_country_rows.append(df)
-                    print(f"OK ({len(df)} rows)")
-                else:
-                    print("0 rows")
-            except Exception as e:
-                print(f"ERROR: {e}")
-
-    if all_country_rows:
-        df_country = pd.concat(all_country_rows, ignore_index=True)
-        path = os.path.join(DATA_DIR, "exports_by_country.csv")
-        df_country.to_csv(path, index=False)
-        print(f"\nSaved: {path} ({len(df_country)} rows)")
-    else:
-        print("WARNING: no by-country data fetched")
-
-    # --- 2. Annual summary (Page 1) ---
-    print("\nFetching annual summary...")
+    # --- Annual summary (Page 1 Overview) ---
+    print("Fetching annual export summary from USDA PSD...")
     summary_rows = []
 
-    for commodity, ncm_codes in NCM_MAP.items():
+    for name, code in COMMODITIES.items():
         for year in YEARS:
-            print(f"  {commodity} {year}...", end=" ")
-            try:
-                row = fetch_annual_summary(commodity, ncm_codes, year)
-                summary_rows.append(row)
-                print(f"OK (USD {row['Exports (USD)']:,.0f})")
-            except Exception as e:
-                print(f"ERROR: {e}")
+            print(f"  {name} {year}...", end=" ")
+            records = fetch_psd(code, year)
+            volume = get_export_value(records)
+            summary_rows.append({
+                "Commodity":      name,
+                "year":           year,
+                "Exports (1000MT)": volume,
+            })
+            print(f"OK ({volume:,.0f} 1000 MT)")
+            time.sleep(0.3)  # be polite to the API
 
-    if summary_rows:
-        df_summary = pd.DataFrame(summary_rows)
-        path = os.path.join(DATA_DIR, "exports_summary.csv")
-        df_summary.to_csv(path, index=False)
-        print(f"\nSaved: {path} ({len(df_summary)} rows)")
-    else:
-        print("WARNING: no summary data fetched")
+    df_summary = pd.DataFrame(summary_rows)
+    path_summary = os.path.join(DATA_DIR, "exports_summary.csv")
+    df_summary.to_csv(path_summary, index=False)
+    print(f"\nSaved: {path_summary} ({len(df_summary)} rows)")
 
-    # --- 3. Metadata ---
-    meta = {"last_updated": datetime.utcnow().isoformat() + "Z"}
+    # --- By-country data ---
+    # USDA PSD does not provide by-country breakdown for Brazil's exports.
+    # We generate a simple placeholder so exports_by_country.csv always exists.
+    # The Streamlit page 3 will show a note about data availability.
+    print("\nGenerating exports_by_country.csv (USDA PSD does not provide by-country data)...")
+    country_rows = []
+    for name, code in COMMODITIES.items():
+        for year in YEARS:
+            country_rows.append({
+                "commodity":     name,
+                "year":          year,
+                "Country":       "Brazil (total)",
+                "Exports (USD)": 0,
+                "Weight (kg)":   0,
+            })
+
+    df_country = pd.DataFrame(country_rows)
+    path_country = os.path.join(DATA_DIR, "exports_by_country.csv")
+    df_country.to_csv(path_country, index=False)
+    print(f"Saved: {path_country}")
+
+    # --- Metadata ---
+    meta = {"last_updated": datetime.utcnow().isoformat() + "Z", "source": "USDA PSD"}
     with open(os.path.join(DATA_DIR, "exports_meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
 
