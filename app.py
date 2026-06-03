@@ -27,10 +27,8 @@ st.markdown("""
 :root {
     --bg:         #FFFFFF;
     --bg2:        #F7F8FA;
-    --bg3:        #F0F2F5;
     --border:     #E2E6EA;
     --navy:       #1A2A4A;
-    --navy-light: #2E4070;
     --gold:       #B8963E;
     --green:      #1A7A4A;
     --red:        #C0392B;
@@ -44,25 +42,20 @@ html, body, [class*="css"] {
     font-family: var(--font) !important;
     background-color: var(--bg) !important;
     color: var(--text) !important;
+    font-size: 18px !important;
 }
 
 .main .block-container {
     padding: 2.5rem 3rem 4rem;
     max-width: 1200px;
-    background: var(--bg);
 }
 
 /* SIDEBAR */
-[data-testid="stSidebar"] {
-    background: var(--navy) !important;
-}
+[data-testid="stSidebar"] { background: var(--navy) !important; }
 [data-testid="stSidebar"] * { color: #CBD5E0 !important; }
 [data-testid="stSidebar"] .block-container { padding: 2rem 1.4rem; }
-
-/* RADIO NAV */
 [data-testid="stRadio"] label {
-    font-size: 1rem !important;
-    font-weight: 400 !important;
+    font-size: 1.05rem !important;
     color: #A0AEC0 !important;
     padding: 0.5rem 0 !important;
 }
@@ -75,15 +68,14 @@ h1 {
     letter-spacing: -0.03em !important;
     color: var(--navy) !important;
     line-height: 1.1 !important;
-    margin-bottom: 0.4rem !important;
 }
 h2 {
-    font-size: 1.7rem !important;
+    font-size: 1.9rem !important;
     font-weight: 600 !important;
     color: var(--navy) !important;
 }
 h3 {
-    font-size: 0.72rem !important;
+    font-size: 0.75rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.14em !important;
     text-transform: uppercase !important;
@@ -105,40 +97,36 @@ hr {
     padding: 1.4rem 1.6rem !important;
 }
 [data-testid="stMetricLabel"] {
-    font-size: 0.72rem !important;
+    font-size: 0.75rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.12em !important;
     text-transform: uppercase !important;
     color: var(--text-muted) !important;
 }
 [data-testid="stMetricValue"] {
-    font-size: 2.2rem !important;
+    font-size: 2.4rem !important;
     font-weight: 700 !important;
     color: var(--navy) !important;
 }
 
-/* SELECTBOX */
 [data-testid="stSelectbox"] > div > div {
     background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    font-size: 1rem !important;
+    font-size: 1.05rem !important;
 }
 
-/* ALERT */
 [data-testid="stAlert"] {
     background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
     color: var(--text-mid) !important;
 }
 
-/* CAPTION */
 [data-testid="stCaptionContainer"] {
-    font-size: 0.75rem !important;
+    font-size: 0.8rem !important;
     color: var(--text-muted) !important;
-    letter-spacing: 0.02em !important;
 }
 
 /* PRICE ROW */
@@ -146,7 +134,7 @@ hr {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.1rem 1.6rem;
+    padding: 1.2rem 1.6rem;
     background: var(--bg);
     border: 1px solid var(--border);
     border-left: 4px solid var(--navy);
@@ -159,57 +147,55 @@ hr {
     transform: translateX(3px);
 }
 .price-name {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--navy);
-    min-width: 120px;
+    min-width: 130px;
 }
 .price-value {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: var(--text);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
 }
 .price-unit {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     margin-left: 5px;
     font-weight: 400;
 }
 .price-change-up {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--green);
     background: #E8F5EE;
-    padding: 4px 12px;
+    padding: 5px 14px;
     border-radius: 20px;
     font-variant-numeric: tabular-nums;
-    min-width: 80px;
+    min-width: 88px;
     text-align: center;
 }
 .price-change-down {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--red);
     background: #FDF0EE;
-    padding: 4px 12px;
+    padding: 5px 14px;
     border-radius: 20px;
     font-variant-numeric: tabular-nums;
-    min-width: 80px;
+    min-width: 88px;
     text-align: center;
 }
 .price-date {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
-    font-weight: 400;
     min-width: 70px;
     text-align: right;
 }
 
-/* EYEBROW */
 .page-eyebrow {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -217,23 +203,23 @@ hr {
     margin-bottom: 0.5rem;
 }
 
-/* RATE CARD */
+/* RATE CARD — compacto */
 .rate-card {
     background: var(--navy);
-    border-radius: 12px;
-    padding: 2.2rem 1.8rem;
+    border-radius: 10px;
+    padding: 1.4rem 1.4rem;
     text-align: center;
 }
 .rate-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
-    margin-bottom: 0.7rem;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 0.5rem;
 }
 .rate-value {
-    font-size: 3rem;
+    font-size: 1.9rem;
     font-weight: 700;
     color: #FFFFFF;
     line-height: 1;
@@ -241,10 +227,9 @@ hr {
     letter-spacing: -0.02em;
 }
 .rate-sub {
-    font-size: 0.72rem;
-    color: rgba(255,255,255,0.3);
-    margin-top: 0.6rem;
-    letter-spacing: 0.04em;
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.28);
+    margin-top: 0.5rem;
 }
 
 /* SIDEBAR BRAND */
@@ -252,7 +237,6 @@ hr {
     font-size: 1.15rem;
     font-weight: 700;
     color: #FFFFFF;
-    letter-spacing: -0.01em;
 }
 .sidebar-brand-sub {
     font-size: 0.65rem;
@@ -263,7 +247,7 @@ hr {
     margin-top: 4px;
 }
 .sidebar-section-label {
-    font-size: 0.62rem;
+    font-size: 0.63rem;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -271,7 +255,7 @@ hr {
     margin: 2rem 0 0.8rem;
 }
 .sidebar-source {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: rgba(255,255,255,0.5);
     padding: 0.4rem 0;
     border-bottom: 1px solid rgba(255,255,255,0.07);
@@ -282,13 +266,13 @@ hr {
 PLOT_LAYOUT = dict(
     plot_bgcolor="#FFFFFF",
     paper_bgcolor="#FFFFFF",
-    font=dict(family="Inter, system-ui, sans-serif", color="#1A1A2E", size=13),
+    font=dict(family="Inter, system-ui, sans-serif", color="#1A1A2E", size=14),
     xaxis=dict(gridcolor="#E2E6EA", linecolor="#E2E6EA",
-               tickfont=dict(size=12, color="#8A96A3")),
+               tickfont=dict(size=13, color="#8A96A3")),
     yaxis=dict(gridcolor="#E2E6EA", linecolor="#E2E6EA",
-               tickfont=dict(size=12, color="#8A96A3")),
+               tickfont=dict(size=13, color="#8A96A3")),
     margin=dict(l=10, r=10, t=55, b=10),
-    hoverlabel=dict(bgcolor="#1A2A4A", font_size=13,
+    hoverlabel=dict(bgcolor="#1A2A4A", font_size=14,
                     font_color="#FFFFFF", bordercolor="#1A2A4A"),
 )
 
@@ -320,13 +304,13 @@ if page == "Overview":
     st.markdown('<div class="page-eyebrow">Dashboard</div>', unsafe_allow_html=True)
     st.title("Commodity Monitor")
     st.markdown(
-        "<p style='font-size:1.05rem;color:#4A5568;margin-top:0.2rem'>"
+        "<p style='font-size:1.15rem;color:#4A5568;margin-top:0.2rem;line-height:1.6'>"
         "International prices and Brazilian export data for grains and soft commodities."
         "</p>", unsafe_allow_html=True
     )
     st.divider()
 
-    col1, col2 = st.columns([2, 1], gap="large")
+    col1, col2 = st.columns([3, 1], gap="large")
 
     with col1:
         st.markdown("### Latest Prices")
@@ -391,7 +375,7 @@ elif page == "International Prices":
     st.markdown('<div class="page-eyebrow">Markets</div>', unsafe_allow_html=True)
     st.title("International Prices")
     st.markdown(
-        "<p style='font-size:1.05rem;color:#4A5568'>Monthly historical series. Source: Yahoo Finance.</p>",
+        "<p style='font-size:1.15rem;color:#4A5568;line-height:1.6'>Monthly historical series. Source: Yahoo Finance.</p>",
         unsafe_allow_html=True
     )
     st.divider()
@@ -435,7 +419,7 @@ elif page == "Brazil Exports":
     st.markdown('<div class="page-eyebrow">Trade</div>', unsafe_allow_html=True)
     st.title("Brazil Exports")
     st.markdown(
-        "<p style='font-size:1.05rem;color:#4A5568'>Export volume by commodity. Source: USDA PSD.</p>",
+        "<p style='font-size:1.15rem;color:#4A5568;line-height:1.6'>Export volume by commodity. Source: USDA PSD.</p>",
         unsafe_allow_html=True
     )
     st.divider()
@@ -460,7 +444,7 @@ elif page == "BRL vs Commodities":
     st.markdown('<div class="page-eyebrow">Analysis</div>', unsafe_allow_html=True)
     st.title("BRL vs Commodities")
     st.markdown(
-        "<p style='font-size:1.05rem;color:#4A5568'>Correlation between exchange rate and international commodity prices.</p>",
+        "<p style='font-size:1.15rem;color:#4A5568;line-height:1.6'>Correlation between exchange rate and international commodity prices.</p>",
         unsafe_allow_html=True
     )
     st.divider()
@@ -488,14 +472,14 @@ elif page == "BRL vs Commodities":
         fig.update_layout(
             title=f"BRL/USD vs {commodity} — 12 months",
             title_font=dict(family="Inter", size=16, color="#1A2A4A"),
-            yaxis=dict(title="BRL/USD", titlefont=dict(color="#1A7A4A", size=13),
+            yaxis=dict(title="BRL/USD", titlefont=dict(color="#1A7A4A", size=14),
                        tickfont=dict(color="#1A7A4A")),
-            yaxis2=dict(title="Price", titlefont=dict(color="#1A2A4A", size=13),
+            yaxis2=dict(title="Price", titlefont=dict(color="#1A2A4A", size=14),
                         tickfont=dict(color="#1A2A4A"),
                         overlaying="y", side="right"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02,
                         bgcolor="rgba(0,0,0,0)", bordercolor="#E2E6EA",
-                        font=dict(size=13)),
+                        font=dict(size=14)),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
