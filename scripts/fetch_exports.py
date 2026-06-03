@@ -3,7 +3,7 @@ import pandas as pd
 import json, os, time
 from datetime import datetime
 
-BASE_URL = "https://apps.fas.usda.gov/psdonline/api/psd"
+BASE_URL = "https://apps.fas.usda.gov/OpenData/api/psd"
 HEADERS = {"Accept": "application/json", "User-Agent": "commodity-monitor/1.0"}
 COMMODITIES = {"Soybeans":"2222000","Corn":"0440000","Wheat":"0410000","Coffee":"0711100","Sugar":"0613100","Cocoa":"0721100"}
 YEARS = [2021, 2022, 2023, 2024]
