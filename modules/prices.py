@@ -25,8 +25,11 @@ def get_commodity_prices(commodity, months=24):
     if not code:
         return pd.DataFrame(columns=["date", "price"])
     url = (
-        "https://api.worldbank.org/v2/en/indicator/" + code
-        + "?format=json&mrv=" + str(months) + "&frequency=M"
+        "https://api.worldbank.org/v2/country/all/indicator/"
+        + code
+        + "?format=json&mrv="
+        + str(months)
+        + "&frequency=M"
     )
     try:
         resp = requests.get(url, timeout=15)
