@@ -60,3 +60,16 @@ def get_annual_exports_summary(year=2023):
     for commodity, ncm_list in NCM_GROUPS.items():
         try:
             resp = requests.post(BASE_URL, json=_payload(ncm_list, year, []), timeout=15)
+            resp.raise_for_status()
+            lst = resp.json().get("data", {}).get("list", [])
+            if lst:
+                fob_col = next((k for k in lst[0] if "fob" in k.lower()), None)
+                if fob_col:
+                    total = sum(float(r.get(fob_col, 0)) for r in lst if r.get(fob_col))
+                    rows.append({"Commodity": commodity, "Exports (USD)": total, "Year": year})
+        except Exception as e:
+            print("summary error " + commodity + ": " + str(e))
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values("Exports (USD)", ascending=False).reset_index(drop=True)
+    return df
