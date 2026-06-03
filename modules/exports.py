@@ -12,18 +12,21 @@ NCM_GROUPS = {
 
 BASE_URL = "https://api-comexstat.mdic.gov.br/general"
 
-PARAMS = {
-    "flow":        "export",
-    "yearStart":   2023,
-    "yearEnd":     2023,
-    "monthStart":  1,
-    "monthEnd":    12,
-    "typeForm":    1,
-    "typeOrder":   1,
-    "filterList":  [],
-    "detailList":  ["country"],
-    "metricList":  ["metricFOB"],
-}
+
+def _build_payload(ncm_list, year, details):
+    return {
+        "yearStart":   year,
+        "yearEnd":     year,
+        "monthStart":  1,
+        "monthEnd":    12,
+        "monthDetail": False,
+        "flow":        "export",
+        "typeOrder":   1,
+        "typeForm":    1,
+        "detailList":  details,
+        "filterList":  [{"filter": "ncm", "values": ncm_list}],
+        "metricList":  ["metricFOB", "metricKG"],
+    }
 
 
 def get_exports_by_commodity(commodity, year=2023):
@@ -31,10 +34,7 @@ def get_exports_by_commodity(commodity, year=2023):
     if not ncm_list:
         return pd.DataFrame()
     try:
-        payload = {**PARAMS}
-        payload["yearStart"] = year
-        payload["yearEnd"]   = year
-        payload["filterList"] = [{"filter": "ncm", "values": ncm_list}]
+        payload = _build_payload(ncm_list, year, ["country"])
         resp = requests.post(BASE_URL, json=payload, timeout=15)
         resp.raise_for_status()
         data = resp.json()
@@ -42,8 +42,8 @@ def get_exports_by_commodity(commodity, year=2023):
         if not lst:
             return pd.DataFrame()
         df = pd.DataFrame(lst)
-        name_col = next((c for c in df.columns if "country" in c.lower() or "pais" in c.lower()), None)
-        fob_col  = next((c for c in df.columns if "fob" in c.lower() or "metric" in c.lower()), None)
+        name_col = next((c for c in df.columns if "country" in c.lower() or "pais" in c.lower() or "nopais" in c.lower()), None)
+        fob_col  = next((c for c in df.columns if "fob" in c.lower()), None)
         if not name_col or not fob_col:
             return pd.DataFrame()
         df = df[[name_col, fob_col]].copy()
@@ -61,17 +61,13 @@ def get_annual_exports_summary(year=2023):
     rows = []
     for commodity, ncm_list in NCM_GROUPS.items():
         try:
-            payload = {**PARAMS}
-            payload["yearStart"]  = year
-            payload["yearEnd"]    = year
-            payload["filterList"] = [{"filter": "ncm", "values": ncm_list}]
-            payload["detailList"] = []
+            payload = _build_payload(ncm_list, year, [])
             resp = requests.post(BASE_URL, json=payload, timeout=15)
             resp.raise_for_status()
             data = resp.json()
             lst = data.get("data", {}).get("list", [])
             if lst:
-                fob_col = next((k for k in lst[0] if "fob" in k.lower() or "metric" in k.lower()), None)
+                fob_col = next((k for k in lst[0] if "fob" in k.lower()), None)
                 if fob_col:
                     total = sum(float(r.get(fob_col, 0)) for r in lst if r.get(fob_col))
                     rows.append({"Commodity": commodity, "Exports (USD)": total, "Year": year})
