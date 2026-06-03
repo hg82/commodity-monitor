@@ -2,49 +2,66 @@ import requests
 import pandas as pd
 
 COMMODITIES = {
-    "Soybeans": "PSOYBSUSA",
-    "Corn": "PMAIZMTUSA",
-    "Wheat": "PWHEAMTUSD",
-    "Coffee": "PCOFFOTMUSD",
-    "Sugar": "PSUGAISAUSD",
-    "Cocoa": "PCOCOA",
+    "Soybeans": "PSOYB",
+    "Corn":     "PMAIZ",
+    "Wheat":    "PWHEAMT",
+    "Coffee":   "PCOFFOTM",
+    "Sugar":    "PSUGAR",
+    "Cocoa":    "PCOCO",
 }
 
 COMMODITY_UNITS = {
     "Soybeans": "USD/mt",
-    "Corn": "USD/mt",
-    "Wheat": "USD/mt",
-    "Coffee": "USD/kg",
-    "Sugar": "USD/kg",
-    "Cocoa": "USD/mt",
+    "Corn":     "USD/mt",
+    "Wheat":    "USD/mt",
+    "Coffee":   "USD/kg",
+    "Sugar":    "USD/kg",
+    "Cocoa":    "USD/mt",
 }
+
+IMF_URL = "https://www.imf.org/external/np/res/commod/data/PALLFNFINDEXM.csv"
+
+
+def get_all_prices_imf():
+    try:
+        df = pd.read_csv(
+            "https://www.imf.org/external/np/res/commod/data/PALLFNFINDEXM.csv",
+            skiprows=1
+        )
+        return df
+    except Exception as e:
+        print("IMF fetch error: " + str(e))
+        return pd.DataFrame()
 
 
 def get_commodity_prices(commodity, months=24):
-    code = COMMODITIES.get(commodity)
-    if not code:
+    IMF_CODES = {
+        "Soybeans": "Soybeans",
+        "Corn":     "Corn",
+        "Wheat":    "Wheat, US HRW",
+        "Coffee":   "Coffee, Robusta",
+        "Sugar":    "Sugar, Free Market",
+        "Cocoa":    "Cocoa beans",
+    }
+    col = IMF_CODES.get(commodity)
+    if not col:
         return pd.DataFrame(columns=["date", "price"])
-    url = (
-        "https://api.worldbank.org/v2/country/all/indicator/"
-        + code
-        + "?format=json&mrv="
-        + str(months)
-        + "&frequency=M"
-    )
     try:
-        resp = requests.get(url, timeout=15)
-        resp.raise_for_status()
-        raw = resp.json()
-        if len(raw) < 2 or not raw[1]:
+        df = pd.read_csv(
+            "https://www.imf.org/external/np/res/commod/data/PALLFNFINDEXM.csv",
+            skiprows=1
+        )
+        if "Date" not in df.columns:
+            df.columns.values[0] = "Date"
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        df = df.dropna(subset=["Date"])
+        matching = [c for c in df.columns if col.lower() in c.lower()]
+        if not matching:
             return pd.DataFrame(columns=["date", "price"])
-        records = []
-        for item in raw[1]:
-            if item.get("value") is not None:
-                records.append({
-                    "date": pd.to_datetime(item["date"], format="%YM%m"),
-                    "price": float(item["value"])
-                })
-        df = pd.DataFrame(records).sort_values("date").reset_index(drop=True)
+        df = df[["Date", matching[0]]].copy()
+        df.columns = ["date", "price"]
+        df["price"] = pd.to_numeric(df["price"], errors="coerce")
+        df = df.dropna().sort_values("date").tail(months).reset_index(drop=True)
         return df
     except Exception as e:
         print("Error: " + str(e))
@@ -61,7 +78,7 @@ def get_latest_prices():
             change = ((latest["price"] - prev["price"]) / prev["price"]) * 100
             rows.append({
                 "Commodity": name,
-                "Price": latest["price"],
+                "Price": round(latest["price"], 2),
                 "Unit": COMMODITY_UNITS[name],
                 "Change %": round(change, 2),
                 "Date": latest["date"].strftime("%b/%Y"),
