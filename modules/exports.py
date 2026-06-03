@@ -1,92 +1,174 @@
+"""
+modules/exports.py
+Brazilian export data via Comex Stat / MDIC API
+"""
+
 import requests
 import pandas as pd
-from datetime import datetime
 
 API_URL = "https://api-comexstat.mdic.gov.br/general"
 
-# NCM codes como inteiros (sem zero à esquerda, sem aspas)
-# Soja: 1201001 | Milho: 10059010 | Café: 9011110 | Açúcar: 17011400 | Carne bovina: 2013000
-COMMODITIES = {
-    "Soja": [1201001, 1202900],
-    "Milho": [10059010],
-    "Café": [9011110, 9011200],
-    "Açúcar": [17011400, 17019900],
-    "Carne Bovina": [2013000, 2023000],
-    "Celulose": [47032100, 47032900],
+HEADERS = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
 }
 
-def get_exports(months: int = 12) -> pd.DataFrame:
+# NCM codes as integers (no leading zeros, no quotes)
+# API requires integer values inside filters
+NCM_MAP = {
+    "Soybeans":     [1201001, 1202900],
+    "Corn":         [10059010],
+    "Wheat":        [10019900, 10011900],
+    "Coffee":       [9011110, 9011200, 9012100],
+    "Sugar":        [17011400, 17019900],
+    "Cocoa":        [18010000, 18031000],
+}
+
+# Country code -> name mapping (top Brazil export destinations)
+COUNTRY_NAMES = {
+    "160": "China",
+    "249": "United States",
+    "160": "China",
+    "76":  "Netherlands",
+    "22":  "Germany",
+    "32":  "Argentina",
+    "56":  "Belgium",
+    "124": "Japan",
+    "410": "South Korea",
+    "764": "Thailand",
+    "504": "Morocco",
+    "818": "Egypt",
+    "682": "Saudi Arabia",
+    "356": "India",
+    "566": "Nigeria",
+}
+
+
+def _build_payload(ncm_codes: list, year: int, month_detail: bool = False,
+                   details: list = None) -> dict:
+    """Build the POST payload for the Comex Stat API."""
+    return {
+        "flow": "export",
+        "monthDetail": month_detail,
+        "period": {
+            "from": f"{year}-01",
+            "to":   f"{year}-12",
+        },
+        "filters": [
+            {
+                "filter": "ncm",
+                "values": ncm_codes,  # must be list of integers
+            }
+        ],
+        "details": details or ["country"],
+        "metrics": ["metricFOB", "metricKG"],
+    }
+
+
+def get_exports_by_commodity(commodity: str, year: int) -> pd.DataFrame:
     """
-    Busca exportações brasileiras por commodity via Comex Stat.
-    Retorna DataFrame com colunas: commodity, year, metricFOB, metricKG
+    Returns top export destinations for a given commodity and year.
+    Expected by app.py — Page 3 (Brazil Exports).
+
+    Returns DataFrame with columns: Country, Exports (USD), Weight (kg)
     """
-    today = datetime.today()
-    # Período: últimos N meses
-    end_year = today.year
-    end_month = today.month - 1 if today.month > 1 else 12
-    end_year = end_year if today.month > 1 else end_year - 1
+    ncm_codes = NCM_MAP.get(commodity)
+    if not ncm_codes:
+        return pd.DataFrame(columns=["Country", "Exports (USD)", "Weight (kg)"])
 
-    start_month = end_month - months + 1
-    start_year = end_year
-    if start_month <= 0:
-        start_month += 12
-        start_year -= 1
+    payload = _build_payload(ncm_codes, year, month_detail=False, details=["country"])
 
-    period_from = f"{start_year}-{start_month:02d}"
-    period_to   = f"{end_year}-{end_month:02d}"
+    try:
+        response = requests.post(API_URL, json=payload, headers=HEADERS, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        rows = data.get("data", {}).get("list", [])
 
-    all_rows = []
+        if not rows:
+            return pd.DataFrame(columns=["Country", "Exports (USD)", "Weight (kg)"])
 
-    for commodity_name, ncm_codes in COMMODITIES.items():
+        df = pd.DataFrame(rows)
+
+        # Rename columns to friendly names
+        rename = {}
+        if "country" in df.columns:
+            rename["country"] = "Country"
+        if "metricFOB" in df.columns:
+            rename["metricFOB"] = "Exports (USD)"
+        if "metricKG" in df.columns:
+            rename["metricKG"] = "Weight (kg)"
+
+        df = df.rename(columns=rename)
+
+        # Keep only relevant columns
+        keep = [c for c in ["Country", "Exports (USD)", "Weight (kg)"] if c in df.columns]
+        df = df[keep]
+
+        # Sort by exports descending, top 20
+        if "Exports (USD)" in df.columns:
+            df = df.sort_values("Exports (USD)", ascending=False).head(20)
+
+        return df.reset_index(drop=True)
+
+    except Exception as e:
+        print(f"[exports.py] get_exports_by_commodity error ({commodity}, {year}): {e}")
+        return pd.DataFrame(columns=["Country", "Exports (USD)", "Weight (kg)"])
+
+
+def get_annual_exports_summary(year: int = 2023) -> pd.DataFrame:
+    """
+    Returns total exports per commodity for a given year.
+    Expected by app.py — Page 1 (Overview) bar chart.
+
+    Returns DataFrame with columns: Commodity, Exports (USD)
+    """
+    results = []
+
+    for commodity_name, ncm_codes in NCM_MAP.items():
+        # Summary query: no country breakdown, just totals
         payload = {
             "flow": "export",
             "monthDetail": False,
             "period": {
-                "from": period_from,
-                "to": period_to
+                "from": f"{year}-01",
+                "to":   f"{year}-12",
             },
             "filters": [
                 {
                     "filter": "ncm",
-                    "values": ncm_codes  # lista de inteiros
+                    "values": ncm_codes,
                 }
             ],
             "details": ["ncm"],
-            "metrics": ["metricFOB", "metricKG"]
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            "metrics": ["metricFOB"],
         }
 
         try:
-            response = requests.post(API_URL, json=payload, headers=headers, timeout=30)
+            response = requests.post(API_URL, json=payload, headers=HEADERS, timeout=30)
             response.raise_for_status()
             data = response.json()
-
             rows = data.get("data", {}).get("list", [])
 
             if rows:
-                df = pd.DataFrame(rows)
-                df["commodity"] = commodity_name
-                all_rows.append(df)
+                total_fob = sum(r.get("metricFOB", 0) for r in rows)
+            else:
+                total_fob = 0
 
-        except requests.exceptions.RequestException as e:
-            print(f"[exports.py] Erro ao buscar {commodity_name}: {e}")
-            continue
+            results.append({
+                "Commodity": commodity_name,
+                "Exports (USD)": total_fob,
+            })
 
-    if not all_rows:
-        return pd.DataFrame(columns=["commodity", "year", "metricFOB", "metricKG"])
+        except Exception as e:
+            print(f"[exports.py] get_annual_exports_summary error ({commodity_name}): {e}")
+            results.append({
+                "Commodity": commodity_name,
+                "Exports (USD)": 0,
+            })
 
-    result = pd.concat(all_rows, ignore_index=True)
+    df = pd.DataFrame(results)
 
-    # Agrupa por commodity (soma todos os NCMs da mesma categoria)
-    if "metricFOB" in result.columns and "metricKG" in result.columns:
-        result = (
-            result
-            .groupby("commodity", as_index=False)
-            .agg({"metricFOB": "sum", "metricKG": "sum"})
-        )
+    # Remove rows with zero exports (API may not have data for all commodities)
+    df = df[df["Exports (USD)"] > 0].reset_index(drop=True)
 
-    return result
+    return df
