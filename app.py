@@ -25,312 +25,292 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# STYLE
+# STYLE — palette from hugotolomei.com
 # --------------------------------------------------
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ---- ROOT TOKENS ---- */
 :root {
-    --green:      #00C896;
-    --green-dim:  #00C89622;
-    --red:        #FF4D6D;
-    --red-dim:    #FF4D6D22;
-    --gold:       #C9A547;
-    --gold-dim:   #C9A54720;
-    --bg:         #080C10;
-    --bg2:        #0D1117;
-    --bg3:        #131A22;
-    --border:     #1E2A36;
-    --text:       #E8EDF2;
-    --text-muted: #5A7080;
-    --font-serif: 'DM Serif Display', Georgia, serif;
-    --font-sans:  'DM Sans', system-ui, sans-serif;
-    --font-mono:  'DM Mono', monospace;
+    --bg:         #FFFFFF;
+    --bg2:        #F7F8FA;
+    --bg3:        #F0F2F5;
+    --border:     #E2E6EA;
+    --navy:       #1A2A4A;
+    --navy-light: #2E4070;
+    --gold:       #B8963E;
+    --green:      #1A7A4A;
+    --red:        #C0392B;
+    --text:       #1A1A2E;
+    --text-mid:   #4A5568;
+    --text-muted: #8A96A3;
+    --font:       'Inter', system-ui, sans-serif;
 }
 
-/* ---- GLOBAL ---- */
 html, body, [class*="css"] {
-    font-family: var(--font-sans);
+    font-family: var(--font) !important;
     background-color: var(--bg) !important;
-    color: var(--text);
+    color: var(--text) !important;
 }
 
 .main .block-container {
-    padding: 2rem 2.5rem 4rem;
+    padding: 2.5rem 3rem 4rem;
     max-width: 1200px;
+    background: var(--bg);
 }
 
-/* ---- SIDEBAR ---- */
+/* SIDEBAR */
 [data-testid="stSidebar"] {
-    background: var(--bg2) !important;
-    border-right: 1px solid var(--border);
+    background: var(--navy) !important;
+    border-right: none;
 }
-
+[data-testid="stSidebar"] * {
+    color: #CBD5E0 !important;
+}
 [data-testid="stSidebar"] .block-container {
-    padding: 2rem 1.2rem;
+    padding: 2rem 1.4rem;
 }
 
-/* ---- HEADINGS ---- */
+/* RADIO NAV */
+[data-testid="stRadio"] label {
+    font-size: 0.9rem !important;
+    font-weight: 400 !important;
+    color: #A0AEC0 !important;
+    padding: 0.5rem 0 !important;
+    letter-spacing: 0.01em !important;
+}
+[data-testid="stRadio"] label:hover {
+    color: #FFFFFF !important;
+}
+
+/* HEADINGS */
 h1 {
-    font-family: var(--font-serif) !important;
-    font-size: 2.6rem !important;
-    font-weight: 400 !important;
-    letter-spacing: -0.02em !important;
-    color: var(--text) !important;
-    line-height: 1.1 !important;
-    margin-bottom: 0.3rem !important;
+    font-size: 2.4rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.03em !important;
+    color: var(--navy) !important;
+    line-height: 1.15 !important;
+    margin-bottom: 0.4rem !important;
 }
-
 h2 {
-    font-family: var(--font-serif) !important;
-    font-size: 1.5rem !important;
-    font-weight: 400 !important;
-    color: var(--text) !important;
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    color: var(--navy) !important;
     margin-top: 2rem !important;
 }
-
 h3 {
-    font-family: var(--font-sans) !important;
-    font-size: 0.75rem !important;
+    font-size: 0.7rem !important;
     font-weight: 600 !important;
-    letter-spacing: 0.12em !important;
+    letter-spacing: 0.14em !important;
     text-transform: uppercase !important;
     color: var(--text-muted) !important;
     margin-bottom: 1rem !important;
 }
 
-/* ---- DIVIDER ---- */
+/* DIVIDER */
 hr {
     border: none !important;
     border-top: 1px solid var(--border) !important;
-    margin: 1.5rem 0 !important;
+    margin: 1.8rem 0 !important;
 }
 
-/* ---- METRICS ---- */
+/* METRICS */
 [data-testid="stMetric"] {
-    background: var(--bg3) !important;
+    background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 10px !important;
-    padding: 1.2rem 1.4rem !important;
-    transition: border-color 0.2s;
+    padding: 1.3rem 1.5rem !important;
 }
-
-[data-testid="stMetric"]:hover {
-    border-color: var(--gold) !important;
-}
-
 [data-testid="stMetricLabel"] {
-    font-family: var(--font-mono) !important;
-    font-size: 0.7rem !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
     color: var(--text-muted) !important;
 }
-
 [data-testid="stMetricValue"] {
-    font-family: var(--font-serif) !important;
-    font-size: 1.8rem !important;
-    color: var(--text) !important;
+    font-size: 1.9rem !important;
+    font-weight: 700 !important;
+    color: var(--navy) !important;
 }
 
-/* ---- SELECTBOX / SLIDER ---- */
-[data-testid="stSelectbox"] > div > div,
-[data-testid="stSlider"] {
-    background: var(--bg3) !important;
-    border-color: var(--border) !important;
-    border-radius: 8px !important;
-    color: var(--text) !important;
-}
-
-/* ---- RADIO (nav) ---- */
-[data-testid="stRadio"] label {
-    font-family: var(--font-sans) !important;
-    font-size: 0.88rem !important;
-    font-weight: 500 !important;
-    color: var(--text-muted) !important;
-    padding: 0.4rem 0 !important;
-    transition: color 0.2s;
-}
-
-[data-testid="stRadio"] label:hover {
-    color: var(--text) !important;
-}
-
-/* ---- CAPTION / FOOTNOTE ---- */
-[data-testid="stCaptionContainer"] {
-    font-family: var(--font-mono) !important;
-    font-size: 0.7rem !important;
-    color: var(--text-muted) !important;
-}
-
-/* ---- WARNING / INFO ---- */
-[data-testid="stAlert"] {
-    background: var(--bg3) !important;
+/* SELECTBOX */
+[data-testid="stSelectbox"] > div > div {
+    background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
+    color: var(--text) !important;
 }
 
-/* ---- EXPANDER ---- */
+/* EXPANDER */
 [data-testid="stExpander"] {
-    background: var(--bg3) !important;
+    background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
 }
 
-/* ---- DATAFRAME ---- */
-[data-testid="stDataFrame"] {
+/* ALERT */
+[data-testid="stAlert"] {
+    background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    overflow: hidden !important;
+    font-size: 0.9rem !important;
+    color: var(--text-mid) !important;
 }
 
-/* ---- PRICE ROW CARD ---- */
+/* CAPTION */
+[data-testid="stCaptionContainer"] {
+    font-size: 0.72rem !important;
+    color: var(--text-muted) !important;
+}
+
+/* PRICE ROW */
 .price-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.85rem 1.2rem;
-    background: var(--bg3);
+    padding: 1rem 1.4rem;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-left: 3px solid var(--navy);
+    border-radius: 8px;
     margin-bottom: 0.5rem;
-    transition: border-color 0.2s, transform 0.15s;
+    transition: box-shadow 0.2s, transform 0.15s;
 }
 .price-row:hover {
-    border-color: var(--gold);
-    transform: translateX(3px);
+    box-shadow: 0 2px 12px rgba(26,42,74,0.08);
+    transform: translateX(2px);
 }
 .price-name {
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: var(--text);
-    min-width: 100px;
+    color: var(--navy);
+    min-width: 110px;
 }
 .price-value {
-    font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: 1.15rem;
+    font-weight: 500;
     color: var(--text);
+    font-variant-numeric: tabular-nums;
 }
 .price-unit {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-left: 4px;
-}
-.price-change-up {
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    color: var(--green);
-    background: var(--green-dim);
-    padding: 2px 8px;
-    border-radius: 20px;
-}
-.price-change-down {
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    color: var(--red);
-    background: var(--red-dim);
-    padding: 2px 8px;
-    border-radius: 20px;
-}
-.price-date {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--text-muted);
-}
-
-/* ---- PAGE HEADER ---- */
-.page-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 0.4rem;
-}
-
-/* ---- RATE CARD ---- */
-.rate-card {
-    background: linear-gradient(135deg, var(--bg3) 0%, #0D1A10 100%);
-    border: 1px solid var(--green);
-    border-radius: 12px;
-    padding: 1.8rem;
-    text-align: center;
-}
-.rate-label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--green);
-    margin-bottom: 0.5rem;
-}
-.rate-value {
-    font-family: var(--font-serif);
-    font-size: 2.4rem;
-    color: var(--text);
-    line-height: 1;
-}
-.rate-sub {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-top: 0.4rem;
-}
-
-/* ---- SIDEBAR BRAND ---- */
-.sidebar-brand {
-    margin-bottom: 1.5rem;
-}
-.sidebar-brand-title {
-    font-family: var(--font-serif);
-    font-size: 1.3rem;
-    color: var(--text);
-    line-height: 1.2;
-}
-.sidebar-brand-sub {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--gold);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-.sidebar-section-label {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin: 1.5rem 0 0.6rem;
-}
-.sidebar-source {
-    font-family: var(--font-mono);
     font-size: 0.72rem;
     color: var(--text-muted);
-    padding: 0.3rem 0;
-    border-bottom: 1px solid var(--border);
+    margin-left: 4px;
+    font-weight: 400;
+}
+.price-change-up {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--green);
+    background: #E8F5EE;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-variant-numeric: tabular-nums;
+}
+.price-change-down {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--red);
+    background: #FDF0EE;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-variant-numeric: tabular-nums;
+}
+.price-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* EYEBROW */
+.page-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+}
+
+/* RATE CARD */
+.rate-card {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    height: 100%;
+}
+.rate-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 0.6rem;
+}
+.rate-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.rate-sub {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.35);
+    margin-top: 0.5rem;
+}
+
+/* SIDEBAR BRAND */
+.sidebar-brand-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.01em;
+}
+.sidebar-brand-sub {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 3px;
+}
+.sidebar-section-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin: 1.8rem 0 0.7rem;
+}
+.sidebar-source {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.55);
+    padding: 0.35rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# PLOTLY THEME
+# PLOTLY THEME — light, clean
 # --------------------------------------------------
 
 PLOT_LAYOUT = dict(
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="DM Sans, sans-serif", color="#E8EDF2", size=12),
-    xaxis=dict(gridcolor="#1E2A36", linecolor="#1E2A36", tickfont=dict(size=11, color="#5A7080")),
-    yaxis=dict(gridcolor="#1E2A36", linecolor="#1E2A36", tickfont=dict(size=11, color="#5A7080")),
-    margin=dict(l=10, r=10, t=40, b=10),
-    hoverlabel=dict(bgcolor="#0D1117", font_size=12, bordercolor="#1E2A36"),
+    plot_bgcolor="#FFFFFF",
+    paper_bgcolor="#FFFFFF",
+    font=dict(family="Inter, system-ui, sans-serif", color="#1A1A2E", size=12),
+    xaxis=dict(gridcolor="#E2E6EA", linecolor="#E2E6EA",
+               tickfont=dict(size=11, color="#8A96A3")),
+    yaxis=dict(gridcolor="#E2E6EA", linecolor="#E2E6EA",
+               tickfont=dict(size=11, color="#8A96A3")),
+    margin=dict(l=10, r=10, t=50, b=10),
+    hoverlabel=dict(bgcolor="#1A2A4A", font_size=12,
+                    font_color="#FFFFFF", bordercolor="#1A2A4A"),
 )
 
 # --------------------------------------------------
@@ -339,7 +319,7 @@ PLOT_LAYOUT = dict(
 
 with st.sidebar:
     st.markdown("""
-    <div class="sidebar-brand">
+    <div style="margin-bottom:1.5rem">
         <div class="sidebar-brand-title">Commodity Monitor</div>
         <div class="sidebar-brand-sub">Brazil · hugotolomei.com</div>
     </div>
@@ -357,7 +337,7 @@ with st.sidebar:
     st.markdown("""
     <div class="sidebar-section-label">Data sources</div>
     <div class="sidebar-source">Yahoo Finance</div>
-    <div class="sidebar-source">Comex Stat / MDIC</div>
+    <div class="sidebar-source">USDA PSD</div>
     <div class="sidebar-source">Banco Central do Brasil</div>
     """, unsafe_allow_html=True)
 
@@ -419,13 +399,13 @@ if page == "Overview":
             x="Commodity",
             y="Exports (USD)",
             color="Commodity",
-            color_discrete_sequence=["#C9A547", "#00C896", "#4FC3F7", "#FF6B6B", "#B39DDB", "#80CBC4"],
+            color_discrete_sequence=["#1A2A4A","#2E4070","#B8963E","#1A7A4A","#5A8FC0","#8A96A3"],
             title="Brazilian exports by commodity (2023)",
         )
         fig.update_traces(marker_line_width=0)
         fig.update_layout(
             showlegend=False,
-            title_font=dict(family="DM Serif Display", size=16, color="#E8EDF2"),
+            title_font=dict(family="Inter", size=15, color="#1A2A4A"),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -459,10 +439,14 @@ elif page == "International Prices":
             labels={"date": "", "price": "Price"},
             line_shape="spline",
         )
-        fig.update_traces(line_color="#C9A547", line_width=2.5,
-                          fill="tozeroy", fillcolor="rgba(201,165,71,0.06)")
+        fig.update_traces(
+            line_color="#1A2A4A",
+            line_width=2.5,
+            fill="tozeroy",
+            fillcolor="rgba(26,42,74,0.05)",
+        )
         fig.update_layout(
-            title_font=dict(family="DM Serif Display", size=18, color="#E8EDF2"),
+            title_font=dict(family="Inter", size=15, color="#1A2A4A"),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -526,23 +510,25 @@ elif page == "BRL vs Commodities":
         fig.add_trace(go.Scatter(
             x=df_merged["date"], y=df_merged["brl_usd"],
             name="BRL/USD",
-            line=dict(color="#00C896", width=2.5),
+            line=dict(color="#1A7A4A", width=2.5),
             yaxis="y1",
         ))
         fig.add_trace(go.Scatter(
             x=df_merged["date"], y=df_merged["price"],
             name=commodity,
-            line=dict(color="#C9A547", width=2.5),
+            line=dict(color="#1A2A4A", width=2.5),
             yaxis="y2",
         ))
         fig.update_layout(
             title=f"BRL/USD vs {commodity} — 12 months",
-            title_font=dict(family="DM Serif Display", size=18, color="#E8EDF2"),
-            yaxis=dict(title="BRL/USD", titlefont=dict(color="#00C896"), tickfont=dict(color="#00C896")),
-            yaxis2=dict(title="Price", titlefont=dict(color="#C9A547"), tickfont=dict(color="#C9A547"),
+            title_font=dict(family="Inter", size=15, color="#1A2A4A"),
+            yaxis=dict(title="BRL/USD", titlefont=dict(color="#1A7A4A"),
+                       tickfont=dict(color="#1A7A4A")),
+            yaxis2=dict(title="Price", titlefont=dict(color="#1A2A4A"),
+                        tickfont=dict(color="#1A2A4A"),
                         overlaying="y", side="right"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                        bgcolor="rgba(0,0,0,0)", bordercolor="#1E2A36"),
+                        bgcolor="rgba(0,0,0,0)", bordercolor="#E2E6EA"),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
