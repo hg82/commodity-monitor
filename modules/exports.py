@@ -1,3 +1,8 @@
+"""
+modules/exports.py
+Brazilian export data from Comex Stat / MDIC
+"""
+
 import requests
 import pandas as pd
 
@@ -34,61 +39,66 @@ def _payload(ncm_list, year, details):
     }
 
 
-def _extract_list(response_json):
-    """
-    Tenta encontrar a lista de registros
-    independentemente da estrutura retornada.
-    """
+def _request_data(ncm_list, year, details):
 
-    if isinstance(response_json, list):
-        return response_json
+    try:
 
-    if not isinstance(response_json, dict):
+        response = requests.post(
+            BASE_URL,
+            json=_payload(ncm_list, year, details),
+            timeout=30,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        )
+
+        print("=" * 60)
+        print("STATUS:", response.status_code)
+
+        try:
+            data = response.json()
+        except Exception:
+            print("RAW RESPONSE:")
+            print(response.text[:1000])
+            return []
+
+        print("JSON KEYS:", list(data.keys()) if isinstance(data, dict) else type(data))
+
+        if isinstance(data, dict):
+
+            if "data" in data:
+
+                if isinstance(data["data"], list):
+                    return data["data"]
+
+                if isinstance(data["data"], dict):
+
+                    if "list" in data["data"]:
+                        return data["data"]["list"]
+
+            if "list" in data:
+                return data["list"]
+
+        elif isinstance(data, list):
+            return data
+
         return []
 
-    if "data" in response_json:
+    except Exception as e:
 
-        if isinstance(response_json["data"], list):
-            return response_json["data"]
-
-        if (
-            isinstance(response_json["data"], dict)
-            and "list" in response_json["data"]
-        ):
-            return response_json["data"]["list"]
-
-    return []
+        print("COMEX ERROR:", str(e))
+        return []
 
 
-def _find_fob_column(columns):
-
-    candidates = [
-        "metricFOB",
-        "fob",
-        "vlFob",
-        "valorFob"
-    ]
+def _find_column(columns, keywords):
 
     for col in columns:
-        if any(x.lower() in col.lower() for x in candidates):
-            return col
+        col_lower = col.lower()
 
-    return None
-
-
-def _find_country_column(columns):
-
-    candidates = [
-        "country",
-        "countryname",
-        "nopais",
-        "coPais",
-        "pais"
-    ]
-
-    for col in columns:
-        if any(x.lower() in col.lower() for x in candidates):
-            return col
+        for keyword in keywords:
+            if keyword.lower() in col_lower:
+                return col
 
     return None
 
@@ -100,73 +110,83 @@ def get_exports_by_commodity(commodity, year=2023):
     if not ncm_list:
         return pd.DataFrame()
 
-    try:
+    records = _request_data(
+        ncm_list,
+        year,
+        ["country"]
+    )
 
-        response = requests.post(
-            BASE_URL,
-            json=_payload(ncm_list, year, ["country"]),
-            timeout=30
-        )
+    if not records:
+        print(f"No records found for {commodity}")
+        return pd.DataFrame()
 
-        response.raise_for_status()
+    df = pd.DataFrame(records)
 
-        data = response.json()
-        records = _extract_list(data)
+    print("EXPORT COLUMNS:", df.columns.tolist())
 
-        if not records:
-            print(f"No records for {commodity}")
-            print(data)
-            return pd.DataFrame()
-
-        df = pd.DataFrame(records)
-
-        country_col = _find_country_column(df.columns)
-        fob_col = _find_fob_column(df.columns)
-
-        if not country_col or not fob_col:
-            print("Columns returned:")
-            print(df.columns.tolist())
-            return pd.DataFrame()
-
-        df = df[[country_col, fob_col]].copy()
-
-        df.columns = [
-            "Destination",
-            "FOB Value (USD)"
+    country_col = _find_column(
+        df.columns,
+        [
+            "country",
+            "pais",
+            "nopais",
+            "countryname"
         ]
+    )
 
-        df["FOB Value (USD)"] = pd.to_numeric(
-            df["FOB Value (USD)"],
-            errors="coerce"
-        )
+    fob_col = _find_column(
+        df.columns,
+        [
+            "fob",
+            "metricfob",
+            "valor"
+        ]
+    )
 
-        df = df.dropna()
+    if not country_col or not fob_col:
 
-        df = (
-            df.groupby("Destination", as_index=False)
-            .sum()
-            .sort_values(
-                "FOB Value (USD)",
-                ascending=False
-            )
-            .head(15)
-        )
-
-        df["FOB Value (USD)"] = df[
-            "FOB Value (USD)"
-        ].apply(
-            lambda x: f"${x:,.0f}"
-        )
-
-        return df.reset_index(drop=True)
-
-    except Exception as e:
-
-        print(
-            f"Error loading exports for {commodity}: {e}"
-        )
+        print("Country column:", country_col)
+        print("FOB column:", fob_col)
 
         return pd.DataFrame()
+
+    df = df[[country_col, fob_col]].copy()
+
+    df.columns = [
+        "Destination",
+        "FOB Value (USD)"
+    ]
+
+    df["FOB Value (USD)"] = pd.to_numeric(
+        df["FOB Value (USD)"],
+        errors="coerce"
+    )
+
+    df = df.dropna()
+
+    if df.empty:
+        return pd.DataFrame()
+
+    df = (
+        df.groupby(
+            "Destination",
+            as_index=False
+        )
+        .sum()
+        .sort_values(
+            "FOB Value (USD)",
+            ascending=False
+        )
+        .head(15)
+    )
+
+    df["FOB Value (USD)"] = df[
+        "FOB Value (USD)"
+    ].apply(
+        lambda x: f"${x:,.0f}"
+    )
+
+    return df.reset_index(drop=True)
 
 
 def get_annual_exports_summary(year=2023):
@@ -175,66 +195,70 @@ def get_annual_exports_summary(year=2023):
 
     for commodity, ncm_list in NCM_GROUPS.items():
 
-        try:
+        records = _request_data(
+            ncm_list,
+            year,
+            ["country"]
+        )
 
-            response = requests.post(
-                BASE_URL,
-                json=_payload(
-                    ncm_list,
-                    year,
-                    ["country"]
-                ),
-                timeout=30
-            )
-
-            response.raise_for_status()
-
-            data = response.json()
-            records = _extract_list(data)
-
-            if not records:
-                print(f"No summary data for {commodity}")
-                continue
-
-            df = pd.DataFrame(records)
-
-            fob_col = _find_fob_column(df.columns)
-
-            if not fob_col:
-                print(
-                    f"FOB column not found for {commodity}"
-                )
-                print(df.columns.tolist())
-                continue
-
-            df[fob_col] = pd.to_numeric(
-                df[fob_col],
-                errors="coerce"
-            )
-
-            total = df[fob_col].sum()
-
-            rows.append(
-                {
-                    "Commodity": commodity,
-                    "Exports (USD)": total,
-                    "Year": year
-                }
-            )
-
-        except Exception as e:
+        if not records:
 
             print(
-                f"Summary error for {commodity}: {e}"
+                f"No summary records for {commodity}"
             )
+
+            continue
+
+        df = pd.DataFrame(records)
+
+        print(
+            f"{commodity} columns:",
+            df.columns.tolist()
+        )
+
+        fob_col = _find_column(
+            df.columns,
+            [
+                "fob",
+                "metricfob",
+                "valor"
+            ]
+        )
+
+        if not fob_col:
+
+            print(
+                f"FOB column not found for {commodity}"
+            )
+
+            continue
+
+        df[fob_col] = pd.to_numeric(
+            df[fob_col],
+            errors="coerce"
+        )
+
+        total = df[fob_col].sum()
+
+        rows.append(
+            {
+                "Commodity": commodity,
+                "Exports (USD)": total,
+                "Year": year
+            }
+        )
 
     result = pd.DataFrame(rows)
 
-    if not result.empty:
+    if result.empty:
 
-        result = result.sort_values(
-            "Exports (USD)",
-            ascending=False
-        ).reset_index(drop=True)
+        print("EXPORT SUMMARY EMPTY")
+
+        return result
+
+    result = result.sort_values(
+        "Exports (USD)",
+        ascending=False
+    ).reset_index(drop=True)
 
     return result
