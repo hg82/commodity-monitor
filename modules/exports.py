@@ -2,18 +2,18 @@ import requests
 import pandas as pd
 
 NCM_GROUPS = {
-    "Soybeans": ["1201", "1208", "2304"],
-    "Corn":     ["1005"],
-    "Wheat":    ["1001", "1101"],
-    "Coffee":   ["0901", "2101"],
-    "Sugar":    ["1701", "1702"],
-    "Cocoa":    ["1801", "1802", "1803"],
+    "Soybeans": ["12010000", "12080000", "23040000"],
+    "Corn":     ["10059010", "10059090"],
+    "Wheat":    ["10019900", "11010010"],
+    "Coffee":   ["09011110", "09011190", "21011100"],
+    "Sugar":    ["17011400", "17019900"],
+    "Cocoa":    ["18010000", "18020000", "18031000"],
 }
 
 BASE_URL = "https://api-comexstat.mdic.gov.br/general"
 
 
-def _build_payload(ncm_list, year, details):
+def _payload(ncm_list, year, details):
     return {
         "yearStart":   year,
         "yearEnd":     year,
@@ -25,7 +25,7 @@ def _build_payload(ncm_list, year, details):
         "typeForm":    1,
         "detailList":  details,
         "filterList":  [{"filter": "ncm", "values": ncm_list}],
-        "metricList":  ["metricFOB", "metricKG"],
+        "metricList":  ["metricFOB"],
     }
 
 
@@ -34,15 +34,13 @@ def get_exports_by_commodity(commodity, year=2023):
     if not ncm_list:
         return pd.DataFrame()
     try:
-        payload = _build_payload(ncm_list, year, ["country"])
-        resp = requests.post(BASE_URL, json=payload, timeout=15)
+        resp = requests.post(BASE_URL, json=_payload(ncm_list, year, ["country"]), timeout=15)
         resp.raise_for_status()
-        data = resp.json()
-        lst = data.get("data", {}).get("list", [])
+        lst = resp.json().get("data", {}).get("list", [])
         if not lst:
             return pd.DataFrame()
         df = pd.DataFrame(lst)
-        name_col = next((c for c in df.columns if "country" in c.lower() or "pais" in c.lower() or "nopais" in c.lower()), None)
+        name_col = next((c for c in df.columns if "country" in c.lower()), None)
         fob_col  = next((c for c in df.columns if "fob" in c.lower()), None)
         if not name_col or not fob_col:
             return pd.DataFrame()
@@ -53,7 +51,7 @@ def get_exports_by_commodity(commodity, year=2023):
         df["FOB Value (USD)"] = df["FOB Value (USD)"].apply(lambda x: f"${x:,.0f}")
         return df
     except Exception as e:
-        print("Error exports: " + str(e))
+        print("exports error: " + str(e))
         return pd.DataFrame()
 
 
@@ -61,19 +59,4 @@ def get_annual_exports_summary(year=2023):
     rows = []
     for commodity, ncm_list in NCM_GROUPS.items():
         try:
-            payload = _build_payload(ncm_list, year, [])
-            resp = requests.post(BASE_URL, json=payload, timeout=15)
-            resp.raise_for_status()
-            data = resp.json()
-            lst = data.get("data", {}).get("list", [])
-            if lst:
-                fob_col = next((k for k in lst[0] if "fob" in k.lower()), None)
-                if fob_col:
-                    total = sum(float(r.get(fob_col, 0)) for r in lst if r.get(fob_col))
-                    rows.append({"Commodity": commodity, "Exports (USD)": total, "Year": year})
-        except Exception as e:
-            print("Error summary " + commodity + ": " + str(e))
-    df = pd.DataFrame(rows)
-    if not df.empty:
-        df = df.sort_values("Exports (USD)", ascending=False).reset_index(drop=True)
-    return df
+            resp = requests.post(BASE_URL, json=_payload(ncm_list, year, []), timeout=15)
