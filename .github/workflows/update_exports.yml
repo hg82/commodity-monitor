@@ -25,6 +25,13 @@ jobs:
         run: |
           pip install requests pandas
 
+      - name: Debug - show script content
+        run: |
+          echo "=== HEAD DO ARQUIVO ==="
+          head -20 scripts/fetch_exports.py
+          echo "=== TODOS OS fetch_exports.py NO REPO ==="
+          find . -name "fetch_exports.py"
+
       - name: Run fetch script
         run: |
           python scripts/fetch_exports.py
