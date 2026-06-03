@@ -1,264 +1,92 @@
-"""
-modules/exports.py
-Brazilian export data from Comex Stat / MDIC
-"""
-
 import requests
 import pandas as pd
+from datetime import datetime
 
-NCM_GROUPS = {
-    "Soybeans": ["12010000", "12080000", "23040000"],
-    "Corn":     ["10059010", "10059090"],
-    "Wheat":    ["10019900", "11010010"],
-    "Coffee":   ["09011110", "09011190", "21011100"],
-    "Sugar":    ["17011400", "17019900"],
-    "Cocoa":    ["18010000", "18020000", "18031000"],
+API_URL = "https://api-comexstat.mdic.gov.br/general"
+
+# NCM codes como inteiros (sem zero à esquerda, sem aspas)
+# Soja: 1201001 | Milho: 10059010 | Café: 9011110 | Açúcar: 17011400 | Carne bovina: 2013000
+COMMODITIES = {
+    "Soja": [1201001, 1202900],
+    "Milho": [10059010],
+    "Café": [9011110, 9011200],
+    "Açúcar": [17011400, 17019900],
+    "Carne Bovina": [2013000, 2023000],
+    "Celulose": [47032100, 47032900],
 }
 
-BASE_URL = "https://api-comexstat.mdic.gov.br/general"
+def get_exports(months: int = 12) -> pd.DataFrame:
+    """
+    Busca exportações brasileiras por commodity via Comex Stat.
+    Retorna DataFrame com colunas: commodity, year, metricFOB, metricKG
+    """
+    today = datetime.today()
+    # Período: últimos N meses
+    end_year = today.year
+    end_month = today.month - 1 if today.month > 1 else 12
+    end_year = end_year if today.month > 1 else end_year - 1
 
+    start_month = end_month - months + 1
+    start_year = end_year
+    if start_month <= 0:
+        start_month += 12
+        start_year -= 1
 
-def _payload(ncm_list, year, details):
-    return {
-        "yearStart": year,
-        "yearEnd": year,
-        "monthStart": 1,
-        "monthEnd": 12,
-        "monthDetail": False,
-        "flow": "export",
-        "typeOrder": 1,
-        "typeForm": 1,
-        "detailList": details,
-        "filterList": [
-            {
-                "filter": "ncm",
-                "values": ncm_list
-            }
-        ],
-        "metricList": ["metricFOB"]
-    }
+    period_from = f"{start_year}-{start_month:02d}"
+    period_to   = f"{end_year}-{end_month:02d}"
 
+    all_rows = []
 
-def _request_data(ncm_list, year, details):
+    for commodity_name, ncm_codes in COMMODITIES.items():
+        payload = {
+            "flow": "export",
+            "monthDetail": False,
+            "period": {
+                "from": period_from,
+                "to": period_to
+            },
+            "filters": [
+                {
+                    "filter": "ncm",
+                    "values": ncm_codes  # lista de inteiros
+                }
+            ],
+            "details": ["ncm"],
+            "metrics": ["metricFOB", "metricKG"]
+        }
 
-    try:
-
-        response = requests.post(
-            BASE_URL,
-            json=_payload(ncm_list, year, details),
-            timeout=30,
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        )
-
-        print("=" * 60)
-        print("STATUS:", response.status_code)
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
 
         try:
+            response = requests.post(API_URL, json=payload, headers=headers, timeout=30)
+            response.raise_for_status()
             data = response.json()
-        except Exception:
-            print("RAW RESPONSE:")
-            print(response.text[:1000])
-            return []
 
-        print("JSON KEYS:", list(data.keys()) if isinstance(data, dict) else type(data))
+            rows = data.get("data", {}).get("list", [])
 
-        if isinstance(data, dict):
+            if rows:
+                df = pd.DataFrame(rows)
+                df["commodity"] = commodity_name
+                all_rows.append(df)
 
-            if "data" in data:
-
-                if isinstance(data["data"], list):
-                    return data["data"]
-
-                if isinstance(data["data"], dict):
-
-                    if "list" in data["data"]:
-                        return data["data"]["list"]
-
-            if "list" in data:
-                return data["list"]
-
-        elif isinstance(data, list):
-            return data
-
-        return []
-
-    except Exception as e:
-
-        print("COMEX ERROR:", str(e))
-        return []
-
-
-def _find_column(columns, keywords):
-
-    for col in columns:
-        col_lower = col.lower()
-
-        for keyword in keywords:
-            if keyword.lower() in col_lower:
-                return col
-
-    return None
-
-
-def get_exports_by_commodity(commodity, year=2023):
-
-    ncm_list = NCM_GROUPS.get(commodity)
-
-    if not ncm_list:
-        return pd.DataFrame()
-
-    records = _request_data(
-        ncm_list,
-        year,
-        ["country"]
-    )
-
-    if not records:
-        print(f"No records found for {commodity}")
-        return pd.DataFrame()
-
-    df = pd.DataFrame(records)
-
-    print("EXPORT COLUMNS:", df.columns.tolist())
-
-    country_col = _find_column(
-        df.columns,
-        [
-            "country",
-            "pais",
-            "nopais",
-            "countryname"
-        ]
-    )
-
-    fob_col = _find_column(
-        df.columns,
-        [
-            "fob",
-            "metricfob",
-            "valor"
-        ]
-    )
-
-    if not country_col or not fob_col:
-
-        print("Country column:", country_col)
-        print("FOB column:", fob_col)
-
-        return pd.DataFrame()
-
-    df = df[[country_col, fob_col]].copy()
-
-    df.columns = [
-        "Destination",
-        "FOB Value (USD)"
-    ]
-
-    df["FOB Value (USD)"] = pd.to_numeric(
-        df["FOB Value (USD)"],
-        errors="coerce"
-    )
-
-    df = df.dropna()
-
-    if df.empty:
-        return pd.DataFrame()
-
-    df = (
-        df.groupby(
-            "Destination",
-            as_index=False
-        )
-        .sum()
-        .sort_values(
-            "FOB Value (USD)",
-            ascending=False
-        )
-        .head(15)
-    )
-
-    df["FOB Value (USD)"] = df[
-        "FOB Value (USD)"
-    ].apply(
-        lambda x: f"${x:,.0f}"
-    )
-
-    return df.reset_index(drop=True)
-
-
-def get_annual_exports_summary(year=2023):
-
-    rows = []
-
-    for commodity, ncm_list in NCM_GROUPS.items():
-
-        records = _request_data(
-            ncm_list,
-            year,
-            ["country"]
-        )
-
-        if not records:
-
-            print(
-                f"No summary records for {commodity}"
-            )
-
+        except requests.exceptions.RequestException as e:
+            print(f"[exports.py] Erro ao buscar {commodity_name}: {e}")
             continue
 
-        df = pd.DataFrame(records)
+    if not all_rows:
+        return pd.DataFrame(columns=["commodity", "year", "metricFOB", "metricKG"])
 
-        print(
-            f"{commodity} columns:",
-            df.columns.tolist()
+    result = pd.concat(all_rows, ignore_index=True)
+
+    # Agrupa por commodity (soma todos os NCMs da mesma categoria)
+    if "metricFOB" in result.columns and "metricKG" in result.columns:
+        result = (
+            result
+            .groupby("commodity", as_index=False)
+            .agg({"metricFOB": "sum", "metricKG": "sum"})
         )
-
-        fob_col = _find_column(
-            df.columns,
-            [
-                "fob",
-                "metricfob",
-                "valor"
-            ]
-        )
-
-        if not fob_col:
-
-            print(
-                f"FOB column not found for {commodity}"
-            )
-
-            continue
-
-        df[fob_col] = pd.to_numeric(
-            df[fob_col],
-            errors="coerce"
-        )
-
-        total = df[fob_col].sum()
-
-        rows.append(
-            {
-                "Commodity": commodity,
-                "Exports (USD)": total,
-                "Year": year
-            }
-        )
-
-    result = pd.DataFrame(rows)
-
-    if result.empty:
-
-        print("EXPORT SUMMARY EMPTY")
-
-        return result
-
-    result = result.sort_values(
-        "Exports (USD)",
-        ascending=False
-    ).reset_index(drop=True)
 
     return result
