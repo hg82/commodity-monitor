@@ -8,48 +8,27 @@ on:
 jobs:
   fetch-and-commit:
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          pip install requests pandas
+      - run: pip install requests pandas
 
-      - name: Debug - show script content
-        run: |
-          echo "=== HEAD DO ARQUIVO ==="
-          head -20 scripts/fetch_exports.py
-          echo "=== TODOS OS fetch_exports.py NO REPO ==="
-          find . -name "fetch_exports.py"
+      - name: Verify script
+        run: head -5 scripts/fetch_exports.py
 
       - name: Run fetch script
-        run: |
-          python scripts/fetch_exports.py
+        run: python scripts/fetch_exports.py
 
-      - name: Check for changes
-        id: git_status
+      - name: Commit data
         run: |
-          git diff --quiet data/ || echo "changed=true" >> $GITHUB_OUTPUT
-
-      - name: Commit and push updated CSVs
-        if: steps.git_status.outputs.changed == 'true'
-        run: |
-          git config user.name  "github-actions[bot]"
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/exports_by_country.csv data/exports_summary.csv data/exports_meta.json
-          git commit -m "data: update export data [$(date -u '+%Y-%m-%d')]"
+          git add data/
+          git diff --staged --quiet || git commit -m "data: update [$(date -u '+%Y-%m-%d')]"
           git push
-
-      - name: No changes detected
-        if: steps.git_status.outputs.changed != 'true'
-        run: echo "Data files unchanged — no commit needed."
