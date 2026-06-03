@@ -13,20 +13,12 @@ from modules.prices import get_commodity_prices, get_latest_prices, COMMODITIES
 from modules.exports import get_exports_by_commodity, get_annual_exports_summary
 from modules.fx import get_brl_usd, get_current_rate
 
-# --------------------------------------------------
-# CONFIG
-# --------------------------------------------------
-
 st.set_page_config(
     page_title="Commodity Monitor | Brazil",
     page_icon="🌾",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# --------------------------------------------------
-# STYLE — palette from hugotolomei.com
-# --------------------------------------------------
 
 st.markdown("""
 <style>
@@ -63,56 +55,46 @@ html, body, [class*="css"] {
 /* SIDEBAR */
 [data-testid="stSidebar"] {
     background: var(--navy) !important;
-    border-right: none;
 }
-[data-testid="stSidebar"] * {
-    color: #CBD5E0 !important;
-}
-[data-testid="stSidebar"] .block-container {
-    padding: 2rem 1.4rem;
-}
+[data-testid="stSidebar"] * { color: #CBD5E0 !important; }
+[data-testid="stSidebar"] .block-container { padding: 2rem 1.4rem; }
 
 /* RADIO NAV */
 [data-testid="stRadio"] label {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important;
     font-weight: 400 !important;
     color: #A0AEC0 !important;
     padding: 0.5rem 0 !important;
-    letter-spacing: 0.01em !important;
 }
-[data-testid="stRadio"] label:hover {
-    color: #FFFFFF !important;
-}
+[data-testid="stRadio"] label:hover { color: #FFFFFF !important; }
 
 /* HEADINGS */
 h1 {
-    font-size: 2.4rem !important;
+    font-size: 3rem !important;
     font-weight: 700 !important;
     letter-spacing: -0.03em !important;
     color: var(--navy) !important;
-    line-height: 1.15 !important;
+    line-height: 1.1 !important;
     margin-bottom: 0.4rem !important;
 }
 h2 {
-    font-size: 1.4rem !important;
+    font-size: 1.7rem !important;
     font-weight: 600 !important;
     color: var(--navy) !important;
-    margin-top: 2rem !important;
 }
 h3 {
-    font-size: 0.7rem !important;
-    font-weight: 600 !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
     letter-spacing: 0.14em !important;
     text-transform: uppercase !important;
     color: var(--text-muted) !important;
     margin-bottom: 1rem !important;
 }
 
-/* DIVIDER */
 hr {
     border: none !important;
     border-top: 1px solid var(--border) !important;
-    margin: 1.8rem 0 !important;
+    margin: 2rem 0 !important;
 }
 
 /* METRICS */
@@ -120,17 +102,17 @@ hr {
     background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 10px !important;
-    padding: 1.3rem 1.5rem !important;
+    padding: 1.4rem 1.6rem !important;
 }
 [data-testid="stMetricLabel"] {
     font-size: 0.72rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.1em !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
     text-transform: uppercase !important;
     color: var(--text-muted) !important;
 }
 [data-testid="stMetricValue"] {
-    font-size: 1.9rem !important;
+    font-size: 2.2rem !important;
     font-weight: 700 !important;
     color: var(--navy) !important;
 }
@@ -140,15 +122,7 @@ hr {
     background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    font-size: 0.95rem !important;
-    color: var(--text) !important;
-}
-
-/* EXPANDER */
-[data-testid="stExpander"] {
-    background: var(--bg2) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
+    font-size: 1rem !important;
 }
 
 /* ALERT */
@@ -156,14 +130,15 @@ hr {
     background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     border-radius: 8px !important;
-    font-size: 0.9rem !important;
+    font-size: 0.95rem !important;
     color: var(--text-mid) !important;
 }
 
 /* CAPTION */
 [data-testid="stCaptionContainer"] {
-    font-size: 0.72rem !important;
+    font-size: 0.75rem !important;
     color: var(--text-muted) !important;
+    letter-spacing: 0.02em !important;
 }
 
 /* PRICE ROW */
@@ -171,65 +146,72 @@ hr {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.4rem;
+    padding: 1.1rem 1.6rem;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--navy);
+    border-left: 4px solid var(--navy);
     border-radius: 8px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
     transition: box-shadow 0.2s, transform 0.15s;
 }
 .price-row:hover {
-    box-shadow: 0 2px 12px rgba(26,42,74,0.08);
-    transform: translateX(2px);
+    box-shadow: 0 2px 16px rgba(26,42,74,0.09);
+    transform: translateX(3px);
 }
 .price-name {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--navy);
-    min-width: 110px;
+    min-width: 120px;
 }
 .price-value {
-    font-size: 1.15rem;
-    font-weight: 500;
+    font-size: 1.35rem;
+    font-weight: 600;
     color: var(--text);
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
 }
 .price-unit {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    margin-left: 4px;
+    margin-left: 5px;
     font-weight: 400;
 }
 .price-change-up {
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: 0.88rem;
+    font-weight: 700;
     color: var(--green);
     background: #E8F5EE;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-variant-numeric: tabular-nums;
+    min-width: 80px;
+    text-align: center;
 }
 .price-change-down {
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: 0.88rem;
+    font-weight: 700;
     color: var(--red);
     background: #FDF0EE;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-variant-numeric: tabular-nums;
+    min-width: 80px;
+    text-align: center;
 }
 .price-date {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     font-weight: 400;
+    min-width: 70px;
+    text-align: right;
 }
 
 /* EYEBROW */
 .page-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--gold);
     margin-bottom: 0.5rem;
@@ -239,84 +221,78 @@ hr {
 .rate-card {
     background: var(--navy);
     border-radius: 12px;
-    padding: 2rem 1.5rem;
+    padding: 2.2rem 1.8rem;
     text-align: center;
-    height: 100%;
 }
 .rate-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.5);
-    margin-bottom: 0.6rem;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 0.7rem;
 }
 .rate-value {
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 700;
     color: #FFFFFF;
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
 }
 .rate-sub {
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.35);
-    margin-top: 0.5rem;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.3);
+    margin-top: 0.6rem;
+    letter-spacing: 0.04em;
 }
 
 /* SIDEBAR BRAND */
 .sidebar-brand-title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #FFFFFF;
     letter-spacing: -0.01em;
 }
 .sidebar-brand-sub {
     font-size: 0.65rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--gold);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 4px;
 }
 .sidebar-section-label {
     font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
-    margin: 1.8rem 0 0.7rem;
+    color: rgba(255,255,255,0.28);
+    margin: 2rem 0 0.8rem;
 }
 .sidebar-source {
-    font-size: 0.78rem;
-    color: rgba(255,255,255,0.55);
-    padding: 0.35rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --------------------------------------------------
-# PLOTLY THEME — light, clean
-# --------------------------------------------------
-
 PLOT_LAYOUT = dict(
     plot_bgcolor="#FFFFFF",
     paper_bgcolor="#FFFFFF",
-    font=dict(family="Inter, system-ui, sans-serif", color="#1A1A2E", size=12),
+    font=dict(family="Inter, system-ui, sans-serif", color="#1A1A2E", size=13),
     xaxis=dict(gridcolor="#E2E6EA", linecolor="#E2E6EA",
-               tickfont=dict(size=11, color="#8A96A3")),
+               tickfont=dict(size=12, color="#8A96A3")),
     yaxis=dict(gridcolor="#E2E6EA", linecolor="#E2E6EA",
-               tickfont=dict(size=11, color="#8A96A3")),
-    margin=dict(l=10, r=10, t=50, b=10),
-    hoverlabel=dict(bgcolor="#1A2A4A", font_size=12,
+               tickfont=dict(size=12, color="#8A96A3")),
+    margin=dict(l=10, r=10, t=55, b=10),
+    hoverlabel=dict(bgcolor="#1A2A4A", font_size=13,
                     font_color="#FFFFFF", bordercolor="#1A2A4A"),
 )
 
-# --------------------------------------------------
 # SIDEBAR
-# --------------------------------------------------
-
 with st.sidebar:
     st.markdown("""
     <div style="margin-bottom:1.5rem">
@@ -324,16 +300,13 @@ with st.sidebar:
         <div class="sidebar-brand-sub">Brazil · hugotolomei.com</div>
     </div>
     """, unsafe_allow_html=True)
-
     st.divider()
-
     page = st.radio(
         "",
         ["Overview", "International Prices", "Brazil Exports", "BRL vs Commodities"],
         index=0,
         label_visibility="collapsed",
     )
-
     st.markdown("""
     <div class="sidebar-section-label">Data sources</div>
     <div class="sidebar-source">Yahoo Finance</div>
@@ -341,15 +314,16 @@ with st.sidebar:
     <div class="sidebar-source">Banco Central do Brasil</div>
     """, unsafe_allow_html=True)
 
-# --------------------------------------------------
 # PAGE 1: OVERVIEW
-# --------------------------------------------------
-
 if page == "Overview":
 
     st.markdown('<div class="page-eyebrow">Dashboard</div>', unsafe_allow_html=True)
     st.title("Commodity Monitor")
-    st.markdown("International prices and Brazilian export data for grains and soft commodities.")
+    st.markdown(
+        "<p style='font-size:1.05rem;color:#4A5568;margin-top:0.2rem'>"
+        "International prices and Brazilian export data for grains and soft commodities."
+        "</p>", unsafe_allow_html=True
+    )
     st.divider()
 
     col1, col2 = st.columns([2, 1], gap="large")
@@ -396,8 +370,7 @@ if page == "Overview":
     if not df_exp.empty:
         fig = px.bar(
             df_exp,
-            x="Commodity",
-            y="Exports (USD)",
+            x="Commodity", y="Exports (USD)",
             color="Commodity",
             color_discrete_sequence=["#1A2A4A","#2E4070","#B8963E","#1A7A4A","#5A8FC0","#8A96A3"],
             title="Brazilian exports by commodity (2023)",
@@ -405,22 +378,22 @@ if page == "Overview":
         fig.update_traces(marker_line_width=0)
         fig.update_layout(
             showlegend=False,
-            title_font=dict(family="Inter", size=15, color="#1A2A4A"),
+            title_font=dict(family="Inter", size=16, color="#1A2A4A"),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Export data is being fetched. Check back shortly.")
 
-# --------------------------------------------------
 # PAGE 2: INTERNATIONAL PRICES
-# --------------------------------------------------
-
 elif page == "International Prices":
 
     st.markdown('<div class="page-eyebrow">Markets</div>', unsafe_allow_html=True)
     st.title("International Prices")
-    st.markdown("Monthly historical series. Source: Yahoo Finance.")
+    st.markdown(
+        "<p style='font-size:1.05rem;color:#4A5568'>Monthly historical series. Source: Yahoo Finance.</p>",
+        unsafe_allow_html=True
+    )
     st.divider()
 
     col1, col2 = st.columns([2, 1], gap="large")
@@ -440,13 +413,11 @@ elif page == "International Prices":
             line_shape="spline",
         )
         fig.update_traces(
-            line_color="#1A2A4A",
-            line_width=2.5,
-            fill="tozeroy",
-            fillcolor="rgba(26,42,74,0.05)",
+            line_color="#1A2A4A", line_width=2.5,
+            fill="tozeroy", fillcolor="rgba(26,42,74,0.05)",
         )
         fig.update_layout(
-            title_font=dict(family="Inter", size=15, color="#1A2A4A"),
+            title_font=dict(family="Inter", size=16, color="#1A2A4A"),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -458,15 +429,15 @@ elif page == "International Prices":
     else:
         st.warning("No data available for this commodity.")
 
-# --------------------------------------------------
 # PAGE 3: BRAZIL EXPORTS
-# --------------------------------------------------
-
 elif page == "Brazil Exports":
 
     st.markdown('<div class="page-eyebrow">Trade</div>', unsafe_allow_html=True)
     st.title("Brazil Exports")
-    st.markdown("Export volume by commodity. Source: USDA PSD.")
+    st.markdown(
+        "<p style='font-size:1.05rem;color:#4A5568'>Export volume by commodity. Source: USDA PSD.</p>",
+        unsafe_allow_html=True
+    )
     st.divider()
 
     col1, col2 = st.columns([2, 1], gap="large")
@@ -479,20 +450,19 @@ elif page == "Brazil Exports":
         df_exp = get_exports_by_commodity(commodity, year)
 
     if not df_exp.empty:
-        st.markdown(f"### {commodity} exports — {year}")
         st.dataframe(df_exp, use_container_width=True, hide_index=True)
     else:
         st.info("Export data unavailable for this selection.")
 
-# --------------------------------------------------
 # PAGE 4: BRL VS COMMODITIES
-# --------------------------------------------------
-
 elif page == "BRL vs Commodities":
 
     st.markdown('<div class="page-eyebrow">Analysis</div>', unsafe_allow_html=True)
     st.title("BRL vs Commodities")
-    st.markdown("Correlation between exchange rate and international commodity prices.")
+    st.markdown(
+        "<p style='font-size:1.05rem;color:#4A5568'>Correlation between exchange rate and international commodity prices.</p>",
+        unsafe_allow_html=True
+    )
     st.divider()
 
     commodity = st.selectbox("Commodity", list(COMMODITIES.keys()))
@@ -509,26 +479,23 @@ elif page == "BRL vs Commodities":
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=df_merged["date"], y=df_merged["brl_usd"],
-            name="BRL/USD",
-            line=dict(color="#1A7A4A", width=2.5),
-            yaxis="y1",
+            name="BRL/USD", line=dict(color="#1A7A4A", width=2.5), yaxis="y1",
         ))
         fig.add_trace(go.Scatter(
             x=df_merged["date"], y=df_merged["price"],
-            name=commodity,
-            line=dict(color="#1A2A4A", width=2.5),
-            yaxis="y2",
+            name=commodity, line=dict(color="#1A2A4A", width=2.5), yaxis="y2",
         ))
         fig.update_layout(
             title=f"BRL/USD vs {commodity} — 12 months",
-            title_font=dict(family="Inter", size=15, color="#1A2A4A"),
-            yaxis=dict(title="BRL/USD", titlefont=dict(color="#1A7A4A"),
+            title_font=dict(family="Inter", size=16, color="#1A2A4A"),
+            yaxis=dict(title="BRL/USD", titlefont=dict(color="#1A7A4A", size=13),
                        tickfont=dict(color="#1A7A4A")),
-            yaxis2=dict(title="Price", titlefont=dict(color="#1A2A4A"),
+            yaxis2=dict(title="Price", titlefont=dict(color="#1A2A4A", size=13),
                         tickfont=dict(color="#1A2A4A"),
                         overlaying="y", side="right"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                        bgcolor="rgba(0,0,0,0)", bordercolor="#E2E6EA"),
+                        bgcolor="rgba(0,0,0,0)", bordercolor="#E2E6EA",
+                        font=dict(size=13)),
             **PLOT_LAYOUT,
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -544,9 +511,6 @@ elif page == "BRL vs Commodities":
     else:
         st.warning("Insufficient data for this analysis.")
 
-# --------------------------------------------------
 # FOOTER
-# --------------------------------------------------
-
 st.divider()
 st.caption("Commodity Monitor · Brazil · hugotolomei.com · Data: Yahoo Finance · USDA PSD · BCB")
